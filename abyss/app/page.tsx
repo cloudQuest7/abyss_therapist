@@ -1,11 +1,16 @@
 "use client"
 
-import React from 'react'
-import { FaTwitter, FaGithub, FaLinkedin } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react'
 import Hero from '@/components/landing/hero'
 import StaggeredMenu from '@/components/StaggeredMenu';
 
 const landing = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
     { label: 'About', ariaLabel: 'Learn about us', link: '/about' },
@@ -13,11 +18,20 @@ const landing = () => {
     { label: 'Contact', ariaLabel: 'Get in touch', link: '/contact' }
   ];
 
-const socialItems = [
-  { label: 'Twitter', link: 'https://twitter.com', icon: <FaTwitter /> },
-  { label: 'GitHub', link: 'https://github.com', icon: <FaGithub /> },
-  { label: 'LinkedIn', link: 'https://linkedin.com', icon: <FaLinkedin /> }
-];
+  const socialItems = [
+    { label: 'Twitter', link: 'https://twitter.com' },
+    { label: 'GitHub', link: 'https://github.com' },
+    { label: 'LinkedIn', link: 'https://linkedin.com' }
+  ];
+
+  // Prevent flash by not rendering menu until mounted
+  if (!mounted) {
+    return (
+      <div style={{ height: '100vh', background: '#1a1a1a' }}>
+        <Hero />
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: '100vh', background: '#1a1a1a' }}>
