@@ -2,9 +2,15 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Send, Loader2, Sparkles } from 'lucide-react'
+import { Send, Loader2, Sparkles, Trash2 } from 'lucide-react'
 import { useAuth } from '@/components/AuthContext'
-import { StarsBackground } from '@/components/animate-ui/components/backgrounds/stars'
+import dynamic from 'next/dynamic'
+
+// Lazy load stars background to fix LCP
+const StarsBackground = dynamic(
+  () => import('@/components/animate-ui/components/backgrounds/stars').then(mod => mod.StarsBackground),
+  { ssr: false }
+)
 
 type Message = {
   id: string
@@ -13,16 +19,16 @@ type Message = {
   timestamp: string
 }
 
+const initialMessage: Message = {
+  id: '1',
+  role: 'assistant',
+  content: "hey there. i'm here to listen. what's on your mind?",
+  timestamp: new Date().toISOString(),
+}
+
 export default function ChatPage() {
   const { user } = useAuth()
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "hey there. i'm here to listen. what's on your mind?",
-      timestamp: new Date().toISOString(),
-    }
-  ])
+  const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -35,6 +41,12 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  const handleClearChat = () => {
+    if (confirm('Clear all messages? This cannot be undone.')) {
+      setMessages([initialMessage])
+    }
+  }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
@@ -57,7 +69,6 @@ export default function ChatPage() {
     }
 
     try {
-      // Call your API endpoint
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -85,7 +96,6 @@ export default function ChatPage() {
     } catch (error) {
       console.error('Chat error:', error)
       
-      // Error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -112,66 +122,97 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-80px)] md:h-[calc(100vh-100px)] bg-black">
       
-      {/* Stars Background */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
-        <StarsBackground 
-          starColor="#9be3ff" 
-          pointerEvents={false}
-          factor={0.05}
-          speed={50}
-        />
-      </div>
-
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex-shrink-0 px-4 md:px-6 py-4 md:py-6 border-b border-zinc-900"
-      >
-        <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800">
-              <Sparkles className="h-5 w-5 text-gray-400" />
+      <div className="flex-shrink-0 backdrop-blur-xl bg-black/30 border-b border-zinc-900">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 shadow-lg">
+                <Sparkles className="h-5 w-5 text-gray-300" />
+              </div>
+              <div>
+                <h1 className="text-lg md:text-xl font-light text-white">abyss companion</h1>
+                <p className="text-xs text-gray-500">always here to listen</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg md:text-xl font-light">ai companion</h1>
-              <p className="text-xs text-gray-600">always here to listen</p>
-            </div>
+
+            {messages.length > 1 && (
+              <button
+                onClick={handleClearChat}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors"
+                aria-label="Clear chat history"
+                title="Clear chat"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">clear</span>
+              </button>
+            )}
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6">
-        <div className="max-w-3xl mx-auto space-y-6">
+      {/* Messages Container - Stars background ONLY here */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8 relative">
+        
+        {/* Stars Background - Only in messages area */}
+        <div className="absolute inset-0 opacity-50 pointer-events-none">
+          <StarsBackground className="w-full h-full" />
+        </div>
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+
+        {/* Messages - positioned above background */}
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4 md:space-y-6">
           {messages.map((message, index) => (
             <motion.div
               key={message.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                duration: 0.4,
+                delay: index * 0.02,
+                ease: [0.25, 0.4, 0.25, 1]
+              }}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div
-                className={`max-w-[85%] md:max-w-[75%] rounded-3xl px-5 py-3.5 ${
-                  message.role === 'user'
-                    ? 'bg-white text-black'
-                    : 'bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 text-gray-100'
-                }`}
-              >
-                <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                  {message.content}
-                </p>
-                <p className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-gray-600' : 'text-gray-600'
-                }`}>
-                  {new Date(message.timestamp).toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </p>
+              <div className="flex gap-3 max-w-[85%] md:max-w-[80%]">
+                {/* Avatar for AI */}
+                {message.role === 'assistant' && (
+                  <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-gray-400" />
+                  </div>
+                )}
+
+                {/* Message Bubble */}
+                <div
+                  className={`rounded-3xl px-5 py-4 shadow-2xl ${
+                    message.role === 'user'
+                      ? 'bg-white text-black'
+                      : 'bg-zinc-900/80 backdrop-blur-xl border border-white/10 text-gray-100'
+                  }`}
+                >
+                  <p className="text-[15px] md:text-base leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </p>
+                  <p className={`text-[11px] mt-2.5 ${
+                    message.role === 'user' ? 'text-gray-500' : 'text-gray-600'
+                  }`}>
+                    {new Date(message.timestamp).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+
+                {/* Avatar for User */}
+                {message.role === 'user' && (
+                  <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-white/90 border border-black/10 flex items-center justify-center text-black font-medium text-sm">
+                    {user?.email?.[0].toUpperCase() || 'U'}
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -179,14 +220,23 @@ export default function ChatPage() {
           {/* Loading Indicator */}
           {isLoading && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               className="flex justify-start"
             >
-              <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-3xl px-5 py-3.5">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                  <p className="text-sm text-gray-400">thinking...</p>
+              <div className="flex gap-3 max-w-[85%] md:max-w-[80%]">
+                <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-gray-400" />
+                </div>
+                <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl px-5 py-4 shadow-2xl">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <p className="text-sm text-gray-500 ml-1">thinking</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -197,25 +247,20 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="flex-shrink-0 px-4 md:px-6 py-4 md:py-6 border-t border-zinc-900"
-      >
-        <div className="max-w-3xl mx-auto">
-          <div className="relative flex items-end gap-2 md:gap-3 bg-zinc-900/60 backdrop-blur-sm border border-zinc-800 rounded-3xl p-3 md:p-4">
+      <div className="flex-shrink-0 backdrop-blur-xl bg-black/30 border-t border-zinc-900">
+        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-5">
+          <div className="relative flex items-end gap-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-3 md:p-4 shadow-2xl">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               onInput={handleInput}
-              placeholder="type your message..."
+              placeholder="share what's on your mind..."
               rows={1}
               disabled={isLoading}
               aria-label="Chat message input"
-              className="flex-1 bg-transparent resize-none outline-none text-sm md:text-base text-gray-100 placeholder:text-gray-600 max-h-32 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 bg-transparent resize-none outline-none text-[15px] md:text-base text-gray-100 placeholder:text-gray-600 max-h-32 disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 minHeight: '24px',
                 height: 'auto',
@@ -227,17 +272,17 @@ export default function ChatPage() {
               disabled={!input.trim() || isLoading}
               aria-label="Send message"
               title="Send message"
-              className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+              className="flex-shrink-0 flex items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-100 active:scale-95 transition-all shadow-lg"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-4 w-4 md:h-5 md:w-5" />
             </button>
           </div>
 
-          <p className="text-xs text-gray-600 text-center mt-3">
-            press enter to send · shift + enter for new line
+          <p className="text-[11px] text-gray-600 text-center mt-3">
+            press <span className="text-gray-500">enter</span> to send · <span className="text-gray-500">shift + enter</span> for new line
           </p>
         </div>
-      </motion.div>
+      </div>
 
     </div>
   )
