@@ -15,7 +15,7 @@ export default function Sidebar() {
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
     { name: 'voice', href: '/dashboard/voice', icon: Mic },
-    { name: 'resources', href: '/dashboard/resources', icon: LifeBuoy },
+    { name: 'profile', href: '/dashboard/profile', icon: LifeBuoy },
   ]
 
   const isActive = (href: string) => {

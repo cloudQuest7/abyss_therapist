@@ -1,11 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import Hero from '@/components/landing/hero'
+import FeaturesSection from '@/components/landing/feature'
+import Footer from '@/components/landing/footer'
 import StaggeredMenu from '@/components/StaggeredMenu';
 
-const landing = () => {
-  const [mounted, setMounted] = useState(false);
+const Landing = () => {
+  const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -53,8 +55,10 @@ const landing = () => {
       />
 
       <Hero />
+      <FeaturesSection />
+      <Footer />
     </div>
   )
 }
 
-export default landing
+export default Landing

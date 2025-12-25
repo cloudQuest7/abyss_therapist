@@ -4,14 +4,15 @@ import { useState } from 'react';
 import { motion, easeOut } from 'framer-motion';
 import { MoveRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { 
   GoogleAuthProvider, 
   signInWithPopup, 
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  FirebaseError
+  createUserWithEmailAndPassword
 } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app';
+import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -48,7 +50,36 @@ export default function LoginPage() {
     tap: { scale: 0.98 },
   };
 
+  // Create or update user profile in Firestore
+  const createUserProfile = async (userId: string, userEmail: string, displayName?: string) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        // Create new user document
+        await setDoc(userRef, {
+          email: userEmail,
+          displayName: displayName || 'anonymous',
+          photoURL: '',
+          notifications: true,
+          dailyReminders: true,
+          isPremium: false,
+          createdAt: Timestamp.now()
+        });
+        console.log('✅ User profile created in Firestore');
+      } else {
+        console.log('✅ User profile already exists');
+      }
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      // Don't throw error - allow login to continue even if profile creation fails
+    }
+  };
+
   const handleEmailPasswordAuth = async () => {
+    if (loading) return;
+    
     setError('');
     
     if (!email || !password) {
@@ -61,12 +92,21 @@ export default function LoginPage() {
       return;
     }
 
+    setLoading(true);
+
     try {
+      let userCredential;
+      
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Create user profile in Firestore
+        await createUserProfile(userCredential.user.uid, email);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Ensure profile exists (for existing users)
+        await createUserProfile(userCredential.user.uid, email);
       }
+      
       router.push('/dashboard');
     } catch (error) {
       const firebaseError = error as FirebaseError;
@@ -76,21 +116,39 @@ export default function LoginPage() {
         setError('Invalid email or password');
       } else if (firebaseError.code === 'auth/invalid-email') {
         setError('Invalid email address');
+      } else if (firebaseError.code === 'auth/invalid-credential') {
+        setError('Invalid email or password');
       } else {
         setError('Authentication failed. Please try again.');
       }
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    if (loading) return;
+    
+    setError('');
+    setLoading(true);
+
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create user profile with Google display name
+      await createUserProfile(
+        result.user.uid, 
+        result.user.email || '', 
+        result.user.displayName || undefined
+      );
+      
       router.push('/dashboard');
     } catch (error) {
       setError('Failed to sign in with Google');
       console.error(error);
+      setLoading(false);
     }
   };
 
@@ -133,7 +191,8 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="enter your email"
-                  className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors"
+                  disabled={loading}
+                  className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
               
@@ -144,19 +203,24 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleEmailPasswordAuth()}
                   placeholder="enter your password"
-                  className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 pr-16 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors"
+                  disabled={loading}
+                  className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 pr-16 text-white placeholder-gray-500 focus:outline-none focus:border-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <motion.button 
-                onClick={handleEmailPasswordAuth}
-                whileHover={{ backgroundColor: 'rgba(229, 229, 229, 1)' }}
-                whileTap={{ scale: 0.95 }}
-                type="button"
-                aria-label="Submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-3.5 transition-colors flex items-center justify-center"
+                  onClick={handleEmailPasswordAuth}
+                  whileHover={loading ? {} : { backgroundColor: 'rgba(229, 229, 229, 1)' }}
+                  whileTap={loading ? {} : { scale: 0.95 }}
+                  disabled={loading}
+                  type="button"
+                  aria-label="Submit"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white rounded-full p-3.5 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                <MoveRight className="w-4 h-4 text-black" strokeWidth={2} />
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <MoveRight className="w-4 h-4 text-black" strokeWidth={2} />
+                  )}
                 </motion.button>
-
               </div>
             </motion.div>
 
@@ -169,33 +233,38 @@ export default function LoginPage() {
             <motion.div variants={itemVariants} className="mb-6">
               <motion.button
                 variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
+                whileHover={loading ? {} : "hover"}
+                whileTap={loading ? {} : "tap"}
                 onClick={handleGoogleSignIn}
-                className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 text-white flex items-center justify-between hover:bg-zinc-800 transition-colors group"
+                disabled={loading}
+                className="w-full bg-zinc-800/50 border border-white/10 rounded-full px-6 py-4 text-white flex items-center justify-between hover:bg-zinc-800 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-5 h-5 mr-3"
-                  >
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
+                  {loading ? (
+                    <div className="w-5 h-5 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 mr-3"
+                    >
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
+                    </svg>
+                  )}
                   <span>continue with google</span>
                 </div>
                 <MoveRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -210,9 +279,10 @@ export default function LoginPage() {
                     setIsSignUp(!isSignUp);
                     setError('');
                   }}
-                  className="text-white hover:text-gray-300 transition-colors underline"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  disabled={loading}
+                  className="text-white hover:text-gray-300 transition-colors underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={loading ? {} : { scale: 1.05 }}
+                  whileTap={loading ? {} : { scale: 0.95 }}
                 >
                   {isSignUp ? 'sign in' : 'sign up'}
                 </motion.button>
