@@ -223,9 +223,12 @@ export default function Features() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-center mt-20"
         >
-          <button className="px-6 py-3 rounded-full border border-zinc-800 bg-zinc-900/40 text-sm text-gray-300 hover:text-white hover:border-zinc-700 hover:bg-zinc-900/60 transition-all">
+            <button 
+            onClick={() => window.location.href = '/login'}
+            className="px-8 py-4 rounded-full border border-zinc-800 bg-zinc-900/40 text-base text-gray-300 hover:text-white hover:border-zinc-700 hover:bg-zinc-900/60 transition-all"
+            >
             get started free →
-          </button>
+            </button>
         </motion.div>
 
       </div>

@@ -3,25 +3,28 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   MessageCircle, 
   BookOpen, 
   TrendingUp,
   AlertCircle,
   Flame,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { HexagonBackground } from '@/components/animate-ui/components/backgrounds/hexagon';
 import { useAuth } from '@/components/AuthContext';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getUserStats } from '@/lib/firebase-services';
 
 const moods = [
-  { emoji: '😭', value: 1 },
-  { emoji: '😔', value: 2 },
-  { emoji: '😐', value: 3 },
-  { emoji: '🙂', value: 4 },
-  { emoji: '😊', value: 5 },
+  { emoji: '😭', value: 1, label: 'terrible' },
+  { emoji: '😔', value: 2, label: 'bad' },
+  { emoji: '😐', value: 3, label: 'okay' },
+  { emoji: '🙂', value: 4, label: 'good' },
+  { emoji: '😊', value: 5, label: 'great' },
 ];
 
 const quotes = [
@@ -34,10 +37,12 @@ const quotes = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [selectedMood, setSelectedMood] = useState(3);
   const [quote, setQuote] = useState('');
   const [userName, setUserName] = useState('friend');
   const [moodData, setMoodData] = useState<number[]>([3, 3, 3, 3, 3, 3, 3]);
+  const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -48,6 +53,7 @@ export default function DashboardPage() {
     if (user) {
       loadUserData();
       loadMoodData();
+      loadUserStats();
     }
   }, [user]);
 
@@ -69,7 +75,6 @@ export default function DashboardPage() {
     if (!user) return;
     
     try {
-      // Get last 7 journal entries with mood
       const journalRef = collection(db, 'users', user.uid, 'journals');
       const q = query(
         journalRef,
@@ -87,7 +92,6 @@ export default function DashboardPage() {
         }
       });
       
-      // Reverse to show oldest to newest
       if (moods.length > 0) {
         setMoodData(moods.reverse());
       }
@@ -95,6 +99,18 @@ export default function DashboardPage() {
       console.error('Error loading mood data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserStats = async () => {
+    if (!user) return;
+    try {
+      const statsResult = await getUserStats(user.uid);
+      if (statsResult.success) {
+        setStreak(statsResult.stats.streak);
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
     }
   };
 
@@ -107,190 +123,223 @@ export default function DashboardPage() {
     return 'tough';
   };
 
+  const handleMoodClick = (moodValue: number) => {
+    setSelectedMood(moodValue);
+    router.push(`/dashboard/journal?mood=${moodValue}`);
+  };
+
   return (
-    <div className="relative min-h-screen bg-black overflow-hidden">
+    <div className="relative min-h-screen bg-black overflow-x-hidden">
       {/* Background */}
-      <div className="absolute inset-0 opacity-20">
+      <div className="absolute inset-0 opacity-10">
         <HexagonBackground />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 pb-20 sm:pb-24">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 sm:mb-10"
-          >
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white mb-2">
-              hey {userName}
-            </h1>
-            <p className="text-gray-500 text-base sm:text-lg">how you feeling today?</p>
-          </motion.div>
+      <div className="relative z-10 min-h-screen px-4 py-6 pb-24 max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-light text-white mb-1 truncate">
+                hey {userName}
+              </h1>
+              <p className="text-gray-400 text-sm sm:text-base flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                how you feeling today?
+              </p>
+            </div>
+            <Link 
+              href="/dashboard/analytics"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 text-white text-sm whitespace-nowrap"
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">analytics</span>
+            </Link>
+          </div>
+        </motion.div>
 
-          {/* Compact Mood Selector */}
+        {/* Mood Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
+        >
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-6">
+            <p className="text-gray-400 text-xs sm:text-sm mb-4 uppercase tracking-wide">select your mood</p>
+            <div className="grid grid-cols-5 gap-2">
+              {moods.map((mood) => (
+                <motion.button
+                  key={mood.value}
+                  onClick={() => handleMoodClick(mood.value)}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl transition-all ${
+                    selectedMood === mood.value 
+                      ? 'bg-white/20 border-2 border-white/40' 
+                      : 'bg-white/5 border border-white/10'
+                  }`}
+                >
+                  <span className="text-2xl sm:text-3xl">{mood.emoji}</span>
+                  <span className="text-xs text-gray-400 hidden sm:block">{mood.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          
+          {/* Streak */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 mb-6 sm:mb-8"
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-orange-500/20 to-red-500/10 border border-orange-500/30 rounded-2xl p-4"
           >
-            <div className="flex items-center justify-center gap-3 sm:gap-6">
-              {moods.map((mood) => (
-                <button
-                  key={mood.value}
-                  onClick={() => setSelectedMood(mood.value)}
-                  className={`text-2xl sm:text-3xl transition-all duration-300 ${
-                    selectedMood === mood.value 
-                      ? 'scale-125' 
-                      : 'opacity-30 scale-90'
-                  }`}
-                >
-                  {mood.emoji}
-                </button>
-              ))}
-            </div>
+            <Flame className="w-5 h-5 text-orange-400 mb-2" />
+            <h3 className="text-3xl font-light text-white mb-1">{streak}</h3>
+            <p className="text-xs text-gray-400">day streak</p>
           </motion.div>
 
-          {/* Bento Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            
-            {/* Crisis Mode */}
-            <Link href="/dashboard/crisis" className="col-span-2 sm:col-span-1 sm:row-span-2">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="h-full bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-left transition-all duration-300 cursor-pointer"
-              >
-                <AlertCircle className="w-7 h-7 sm:w-8 sm:h-8 text-red-400 mb-4 sm:mb-6" />
-                <h3 className="text-xl sm:text-2xl lg:text-3xl font-light text-white mb-2 sm:mb-3">
-                  crisis mode
-                </h3>
-                <p className="text-gray-500 text-xs sm:text-sm mb-4 sm:mb-6">
-                  need help right now?
-                </p>
-                <div className="flex items-center gap-2 text-red-400 text-xs">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                  <span>always here</span>
-                </div>
-              </motion.div>
-            </Link>
+          {/* Journal */}
+          <Link href="/dashboard/journal">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/30 rounded-2xl p-4 h-full"
+            >
+              <BookOpen className="w-5 h-5 text-purple-400 mb-2" />
+              <h3 className="text-base font-light text-white mb-1">journal</h3>
+              <p className="text-xs text-gray-400">write it out</p>
+            </motion.div>
+          </Link>
 
-            {/* Journal */}
-            <Link href="/dashboard/journal">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-                className="bg-white/5 hover:bg-white/10 active:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 text-left transition-all duration-300 min-h-[140px] sm:min-h-[160px] cursor-pointer"
-              >
-                <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400 mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg lg:text-xl font-light text-white mb-1 sm:mb-2">journal</h3>
-                <p className="text-gray-500 text-xs sm:text-sm">write it out</p>
-              </motion.div>
-            </Link>
+          {/* Chat */}
+          <Link href="/dashboard/chat">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-4 h-full"
+            >
+              <MessageCircle className="w-5 h-5 text-cyan-400 mb-2" />
+              <h3 className="text-base font-light text-white mb-1">chat</h3>
+              <p className="text-xs text-gray-400">talk to abyss</p>
+            </motion.div>
+          </Link>
 
-            {/* Chat */}
-            <Link href="/dashboard/chat">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white/5 hover:bg-white/10 active:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 text-left transition-all duration-300 min-h-[140px] sm:min-h-[160px] cursor-pointer"
-              >
-                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 text-cyan-400 mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg lg:text-xl font-light text-white mb-1 sm:mb-2">chat</h3>
-                <p className="text-gray-500 text-xs sm:text-sm">talk to abyss</p>
-              </motion.div>
-            </Link>
-
-            {/* Streak */}
+          {/* Crisis */}
+          <Link href="/dashboard/crisis">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-5 lg:p-6 min-h-[140px] sm:min-h-[160px] flex flex-col justify-between"
+              className="bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/30 rounded-2xl p-4 h-full"
             >
-              <Flame className="w-6 h-6 sm:w-7 sm:h-7 text-orange-400" />
-              <div>
-                <h3 className="text-3xl sm:text-4xl font-light text-white mb-1">7</h3>
-                <p className="text-gray-500 text-xs sm:text-sm">day streak</p>
+              <div className="flex items-center justify-between mb-2">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
               </div>
+              <h3 className="text-base font-light text-white mb-1">crisis</h3>
+              <p className="text-xs text-gray-400">need help?</p>
             </motion.div>
+          </Link>
+        </div>
 
-            {/* Real-time Mood Graph */}
-            <Link href="/analytics" className="col-span-2 sm:col-span-1 sm:row-span-1 lg:row-span-2">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="h-full bg-white/5 hover:bg-white/10 active:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 text-left transition-all duration-300 cursor-pointer"
-              >
-                <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400 mb-4 sm:mb-6" />
-                <h3 className="text-base sm:text-lg lg:text-xl font-light text-white mb-1 sm:mb-2">your mood</h3>
-                <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8">last 7 days</p>
-                
-                {/* Real-time Mood Graph */}
-                {loading ? (
-                  <div className="flex items-center justify-center h-20 text-gray-600 text-sm">
-                    loading...
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-end gap-1.5 sm:gap-2 h-16 sm:h-20 mb-3 sm:mb-4">
-                      {moodData.map((mood, i) => {
-                        const height = mood * 20;
-                        const colors = [
-                          'bg-red-500/70',      // 1
-                          'bg-orange-500/70',   // 2
-                          'bg-yellow-500/70',   // 3
-                          'bg-emerald-500/70',  // 4
-                          'bg-green-500/70',    // 5
-                        ];
-                        
-                        return (
-                          <motion.div
-                            key={i}
-                            initial={{ height: 0 }}
-                            animate={{ height: `${height}%` }}
-                            transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
-                            className={`flex-1 ${colors[mood - 1] || 'bg-gray-500/50'} rounded-md sm:rounded-lg`}
-                          />
-                        );
-                      })}
-                    </div>
-                    <p className="text-emerald-400 text-xs">
-                      {moodData.length > 0 ? `${getMoodAverage()} week` : 'no data yet'}
-                    </p>
-                  </>
-                )}
-              </motion.div>
-            </Link>
-
-            {/* Quote */}
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          
+          {/* Mood Graph */}
+          <Link href="/dashboard/analytics" className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45 }}
-              className="col-span-2 sm:col-span-2 lg:col-span-3 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8"
+              transition={{ delay: 0.4 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 hover:border-emerald-500/50 rounded-2xl p-4 sm:p-6 h-full transition-all"
             >
-              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400 mb-3 sm:mb-4" />
-              <p className="text-base sm:text-lg lg:text-2xl font-light text-white/80 mb-3 sm:mb-4 leading-relaxed">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="w-5 h-5 text-emerald-400" />
+                    <h2 className="text-xl font-light text-white">your mood</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">last 7 days</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-light text-emerald-400">{getMoodAverage()}</p>
+                  <p className="text-xs text-gray-500">week trend</p>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center h-32 text-gray-600 text-sm">
+                  loading...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-end gap-2 h-32 mb-4">
+                    {moodData.map((mood, i) => {
+                      const height = mood * 20;
+                      const colors = [
+                        'from-red-500/70 to-red-600/50',
+                        'from-orange-500/70 to-orange-600/50',
+                        'from-yellow-500/70 to-yellow-600/50',
+                        'from-emerald-500/70 to-emerald-600/50',
+                        'from-green-500/70 to-green-600/50',
+                      ];
+                      
+                      return (
+                        <motion.div
+                          key={i}
+                          initial={{ height: 0 }}
+                          animate={{ height: `${height}%` }}
+                          transition={{ delay: 0.5 + i * 0.08, duration: 0.6 }}
+                          className={`flex-1 bg-gradient-to-t ${colors[mood - 1] || 'bg-gray-500/50'} rounded-t-lg`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>7d ago</span>
+                    <span>today</span>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </Link>
+
+          {/* Quote Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="bg-gradient-to-br from-violet-500/20 to-pink-500/10 border border-violet-500/30 rounded-2xl p-6 flex flex-col justify-between min-h-[280px]"
+          >
+            <div>
+              <Sparkles className="w-5 h-5 text-violet-400 mb-4" />
+              <p className="text-lg font-light text-white/90 leading-relaxed mb-6">
                 {quote}
               </p>
-              <button
-                onClick={() => setQuote(quotes[Math.floor(Math.random() * quotes.length)])}
-                className="text-xs sm:text-sm text-violet-400 hover:text-violet-300 transition-colors"
-              >
-                refresh →
-              </button>
-            </motion.div>
+            </div>
+            <button
+              onClick={() => setQuote(quotes[Math.floor(Math.random() * quotes.length)])}
+              className="w-full px-4 py-2 rounded-lg bg-violet-500/20 border border-violet-500/30 hover:bg-violet-500/30 text-violet-300 text-sm font-medium transition-all flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-3 h-3" />
+              new thought
+            </button>
+          </motion.div>
 
-          </div>
         </div>
+
       </div>
     </div>
   );

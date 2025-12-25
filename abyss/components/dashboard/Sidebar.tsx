@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/AuthContext'
-import { Home, MessageCircle, BookOpen, AlertCircle, LifeBuoy, LogOut } from 'lucide-react'
+import { Home, MessageCircle, BookOpen, AlertCircle, LifeBuoy, LogOut, TrendingUp } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -13,6 +13,7 @@ export default function Sidebar() {
     { name: 'home', href: '/dashboard', icon: Home },
     { name: 'chat', href: '/dashboard/chat', icon: MessageCircle },
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
+    { name: 'analytics', href: '/dashboard/analytics', icon:TrendingUp },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
     { name: 'profile', href: '/dashboard/profile', icon: LifeBuoy },
   ]
@@ -29,7 +30,7 @@ export default function Sidebar() {
       
       {/* Logo */}
       <div className="p-6 border-b border-zinc-900">
-        <Link href="/dashboard" className="text-2xl font-light">
+        <Link href="/dashboard" className="text-2xl font-light" style={{ fontFamily: 'Auralyess' }}>
           Abyss
         </Link>
       </div>

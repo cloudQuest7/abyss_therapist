@@ -24,9 +24,9 @@ const Landing = () => {
   ];
 
   const socialItems = [
-    { label: 'Twitter', link: 'https://twitter.com' },
-    { label: 'GitHub', link: 'https://github.com' },
-    { label: 'LinkedIn', link: 'https://linkedin.com' }
+    { label: 'LinkedIn', link: 'https://www.linkedin.com/in/anjali-jayakumar-145902320/' },
+    { label: 'GitHub', link: 'https://github.com/cloudQuest7' },
+    { label: 'Email', link: 'mailto:anjalijayakumar79@gmail.com' }
   ];
 
   // Prevent flash by not rendering menu until mounted

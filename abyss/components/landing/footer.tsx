@@ -6,11 +6,12 @@ import { HexagonBackground } from '@/components/animate-ui/components/background
 import { TextHoverEffect } from '../ui/text-hover-effect'
 import { Github, Twitter, Mail, Heart, ArrowUpRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { Linkedin } from 'lucide-react'
 
 const socialLinks = [
-  { icon: Github, href: 'https://github.com', label: 'GitHub', color: 'hover:bg-purple-500/20 hover:border-purple-500/50' },
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter', color: 'hover:bg-blue-500/20 hover:border-blue-500/50' },
-  { icon: Mail, href: 'mailto:hello@abyss.app', label: 'Email', color: 'hover:bg-green-500/20 hover:border-green-500/50' },
+  { icon: Github, href: 'https://github.com/cloudQuest7', label: 'GitHub', color: 'hover:bg-purple-500/20 hover:border-purple-500/50' },
+  { icon: Linkedin, href: 'https://www.linkedin.com/in/anjali-jayakumar-145902320/', label: 'LinkedIn', color: 'hover:bg-blue-500/20 hover:border-blue-500/50' },
+  { icon: Mail, href: 'mailto:anjalijayakumar79@gmail.com', label: 'Email', color: 'hover:bg-green-500/20 hover:border-green-500/50' },
 ]
 
 const footerLinks = [

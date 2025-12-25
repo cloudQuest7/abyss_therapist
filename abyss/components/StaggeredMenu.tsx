@@ -1,6 +1,10 @@
 "use client"
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import Link from 'next/link';
+import { Github, Linkedin, Mail, Heart, ArrowUpRight, Twitter, Instagram, Youtube } from 'lucide-react'
+
+
 
 export interface StaggeredMenuItem {
   label: string;
@@ -10,6 +14,7 @@ export interface StaggeredMenuItem {
 export interface StaggeredMenuSocialItem {
   label: string;
   link: string;
+  icon?: React.ComponentType<{ className?: string }>;
 }
 export interface StaggeredMenuProps {
   position?: 'left' | 'right';
@@ -247,6 +252,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     });
   }, [position]);
 
+  
   const animateIcon = useCallback((opening: boolean) => {
     const icon = iconRef.current;
     const h = plusHRef.current;
@@ -373,6 +379,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     };
   }, [closeOnClickAway, open, closeMenu]);
 
+  
   return (
     <div
       className={`sm-scope z-40 ${isFixed ? 'fixed top-0 left-0 w-screen h-screen overflow-hidden' : 'w-full h-full'}`}
@@ -410,14 +417,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
           aria-label="Main navigation header"
         >
           <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
-            <img
-              src={logoUrl || '/src/assets/logos/reactbits-gh-white.svg'}
-              alt="Logo"
-              className="sm-logo-img block h-8 w-auto object-contain"
-              draggable={false}
-              width={110}
-              height={24}
-            />
+          
           </div>
 
           <button
@@ -508,18 +508,22 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                   className="sm-socials-list list-none m-0 p-0 flex flex-row items-center gap-4 flex-wrap"
                   role="list"
                 >
-                  {socialItems.map((s, i) => (
-                    <li key={s.label + i} className="sm-socials-item">
-                      <a
-                        href={s.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="sm-socials-link text-[1.2rem] font-medium text-[#111] no-underline relative inline-block py-[2px] transition-[color,opacity] duration-300 ease-linear"
-                      >
-                        {s.label}
-                      </a>
-                    </li>
-                  ))}
+                  {socialItems.map((s, i) => {
+                    const Icon = s.icon;
+                    return (
+                      <li key={s.label + i} className="sm-socials-item">
+                        <a
+                          href={s.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={s.label}
+                          className="sm-socials-link w-8 h-8 rounded-lg bg-black/20 border border-gray-600 flex items-center justify-center text-[#111] no-underline relative transition-all duration-300 ease-linear hover:bg-black/40 hover:border-[var(--sm-accent,#ff0000)]"
+                        >
+                          {Icon && <Icon className="w-5 h-5" />}
+                        </a>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}
