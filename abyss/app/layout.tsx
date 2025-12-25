@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from '@/components/AuthContext'
 import "./globals.css";
+import localFont from 'next/font/local';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +16,12 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const auralyess = localFont({
+  src: './fonts/Auralyess.woff2',
+  variable: '--font-auralyess',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: "Abyss",
   description: "Next Gen AI therapist",
@@ -22,8 +29,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+    <html lang="en" className={auralyess.variable}>
+      <body className="antialiased">
        <AuthProvider>
           {children}
         </AuthProvider>

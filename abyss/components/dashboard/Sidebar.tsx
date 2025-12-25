@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/AuthContext'
-import { Home, MessageCircle, BookOpen, AlertCircle, Mic, LifeBuoy, LogOut } from 'lucide-react'
+import { Home, MessageCircle, BookOpen, AlertCircle, LifeBuoy, LogOut } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -14,8 +14,7 @@ export default function Sidebar() {
     { name: 'chat', href: '/dashboard/chat', icon: MessageCircle },
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
-    { name: 'voice', href: '/dashboard/voice', icon: Mic },
-    { name: 'resources', href: '/dashboard/resources', icon: LifeBuoy },
+    { name: 'profile', href: '/dashboard/profile', icon: LifeBuoy },
   ]
 
   const isActive = (href: string) => {
@@ -31,7 +30,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-zinc-900">
         <Link href="/dashboard" className="text-2xl font-light">
-          abyss
+          Abyss
         </Link>
       </div>
 

@@ -65,7 +65,7 @@ export default function DashboardHome() {
             hey, {user.email?.split('@')[0]}
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            you've been here for a while
+            you have been here for a while
           </p>
         </motion.section>
 
@@ -87,6 +87,8 @@ export default function DashboardHome() {
               max="100"
               value={moodValue}
               onChange={(e) => setMoodValue(Number(e.target.value))}
+              title="Mood slider"
+              aria-label="How are you feeling right now?"
               className="w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer
                 [&::-webkit-slider-thumb]:appearance-none
                 [&::-webkit-slider-thumb]:w-4

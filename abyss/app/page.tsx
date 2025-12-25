@@ -1,21 +1,26 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import Hero from '@/components/landing/hero'
+import FeaturesSection from '@/components/landing/feature'
+import Footer from '@/components/landing/footer'
 import StaggeredMenu from '@/components/StaggeredMenu';
 
-const landing = () => {
-  const [mounted, setMounted] = useState(false);
+const Landing = () => {
+  const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
-    { label: 'About', ariaLabel: 'Learn about us', link: '/about' },
-    { label: 'Services', ariaLabel: 'View our services', link: '/services' },
-    { label: 'Contact', ariaLabel: 'Get in touch', link: '/contact' }
+    { label: 'About', ariaLabel: 'Learn about us', link: '/hero' },
+    { label: 'Feature', ariaLabel: 'View our services', link: '/feature' },
+    { label: 'Contact', ariaLabel: 'Get in touch', link: '/footer' }
   ];
 
   const socialItems = [
@@ -35,6 +40,12 @@ const landing = () => {
 
   return (
     <div style={{ height: '100vh', background: '#1a1a1a' }}>
+<div className="fixed top-7 left-16 z-50">
+      <span className="font-auralyess text-2xl text-white px-4 py-2 select-none">
+        Abyss
+      </span>
+    </div>
+
       <StaggeredMenu
         position="right"
         items={menuItems}
@@ -50,11 +61,14 @@ const landing = () => {
         isFixed={true}
         onMenuOpen={() => console.log('Menu opened')}
         onMenuClose={() => console.log('Menu closed')}
+        
       />
 
       <Hero />
+      <FeaturesSection />
+      <Footer />
     </div>
   )
 }
 
-export default landing
+export default Landing

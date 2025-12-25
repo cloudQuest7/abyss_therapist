@@ -65,3 +65,16 @@
 .sm-scope .staggered-menu-panel {
   pointer-events: auto !important;
 }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
