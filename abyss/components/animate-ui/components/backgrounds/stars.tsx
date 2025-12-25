@@ -11,7 +11,6 @@ import {
 } from 'motion/react';
 
 import { cn } from '@/lib/utils';
-import './stars.css';
 
 type StarLayerProps = HTMLMotionProps<'div'> & {
   count: number;

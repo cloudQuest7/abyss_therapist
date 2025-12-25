@@ -78,3 +78,27 @@
 .animate-shimmer {
   animation: shimmer 3s linear infinite;
 }
+
+/* Star background dots used by StarsBackground component */
+.star-dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  border-radius: 9999px;
+  will-change: box-shadow, transform;
+  pointer-events: none;
+}
+
+.star-dot[data-size="2"] {
+  width: 2px;
+  height: 2px;
+}
+
+.star-dot[data-size="3"] {
+  width: 3px;
+  height: 3px;
+}
