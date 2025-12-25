@@ -77,6 +77,8 @@ export default function BreathingExercise({ onClose }: BreathingExerciseProps) {
       >
         {/* Close Button */}
         <button
+          type="button"
+          aria-label="Close breathing exercise"
           onClick={onClose}
           className="absolute -top-12 right-0 text-gray-400 hover:text-white transition-colors"
         >

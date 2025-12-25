@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/components/AuthContext'
-import { Home, MessageCircle, BookOpen, AlertCircle, Mic, LifeBuoy, LogOut } from 'lucide-react'
+import { Home, MessageCircle, BookOpen, AlertCircle, LifeBuoy, LogOut } from 'lucide-react'
 
 export default function Sidebar() {
   const pathname = usePathname()

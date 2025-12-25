@@ -11,6 +11,7 @@ import {
 } from 'motion/react';
 
 import { cn } from '@/lib/utils';
+import './stars.css';
 
 type StarLayerProps = HTMLMotionProps<'div'> & {
   count: number;
@@ -52,20 +53,18 @@ function StarLayer({
       {...props}
     >
       <div
-        className="absolute bg-transparent rounded-full"
+        className="absolute bg-transparent rounded-full star-dot"
         style={{
-          width: `${size}px`,
-          height: `${size}px`,
           boxShadow: boxShadow,
         }}
+        data-size={size}
       />
       <div
-        className="absolute bg-transparent rounded-full top-[2000px]"
+        className="absolute bg-transparent rounded-full top-[2000px] star-dot"
         style={{
-          width: `${size}px`,
-          height: `${size}px`,
           boxShadow: boxShadow,
         }}
+        data-size={size}
       />
     </motion.div>
   );

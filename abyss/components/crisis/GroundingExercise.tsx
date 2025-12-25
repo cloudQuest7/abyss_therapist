@@ -94,7 +94,9 @@ export default function GroundingExercise({ onClose }: GroundingExerciseProps) {
           className="relative max-w-lg w-full text-center"
         >
           <button
+            type="button"
             onClick={onClose}
+            title="Close grounding exercise"
             className="absolute -top-12 right-0 text-gray-400 hover:text-white transition-colors"
           >
             <X className="w-6 h-6" />
@@ -159,7 +161,9 @@ export default function GroundingExercise({ onClose }: GroundingExerciseProps) {
         className="relative max-w-lg w-full"
       >
         <button
+          type="button"
           onClick={onClose}
+          title="Close grounding exercise"
           className="absolute -top-12 right-0 text-gray-400 hover:text-white transition-colors"
         >
           <X className="w-6 h-6" />
