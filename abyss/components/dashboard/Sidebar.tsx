@@ -14,7 +14,6 @@ export default function Sidebar() {
     { name: 'chat', href: '/dashboard/chat', icon: MessageCircle },
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
-    { name: 'voice', href: '/dashboard/voice', icon: Mic },
     { name: 'profile', href: '/dashboard/profile', icon: LifeBuoy },
   ]
 
@@ -31,7 +30,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-zinc-900">
         <Link href="/dashboard" className="text-2xl font-light">
-          abyss
+          Abyss
         </Link>
       </div>
 

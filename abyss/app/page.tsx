@@ -10,14 +10,17 @@ const Landing = () => {
   const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
-    { label: 'About', ariaLabel: 'Learn about us', link: '/about' },
-    { label: 'Services', ariaLabel: 'View our services', link: '/services' },
-    { label: 'Contact', ariaLabel: 'Get in touch', link: '/contact' }
+    { label: 'About', ariaLabel: 'Learn about us', link: '/hero' },
+    { label: 'Feature', ariaLabel: 'View our services', link: '/feature' },
+    { label: 'Contact', ariaLabel: 'Get in touch', link: '/footer' }
   ];
 
   const socialItems = [
@@ -37,6 +40,12 @@ const Landing = () => {
 
   return (
     <div style={{ height: '100vh', background: '#1a1a1a' }}>
+<div className="fixed top-7 left-16 z-50">
+      <span className="font-auralyess text-2xl text-white px-4 py-2 select-none">
+        Abyss
+      </span>
+    </div>
+
       <StaggeredMenu
         position="right"
         items={menuItems}
@@ -52,6 +61,7 @@ const Landing = () => {
         isFixed={true}
         onMenuOpen={() => console.log('Menu opened')}
         onMenuClose={() => console.log('Menu closed')}
+        
       />
 
       <Hero />
