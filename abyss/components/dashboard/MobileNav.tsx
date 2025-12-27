@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageCircle, BookOpen, AlertCircle, Menu, X, User, LogOut, Sparkles } from 'lucide-react'
+import { Home, MessageCircle, BookOpen, AlertCircle, Menu, X, Users,User, LogOut, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -16,6 +16,7 @@ export default function MobileNav() {
     { name: 'home', href: '/dashboard', icon: Home },
     { name: 'chat', href: '/dashboard/chat', icon: MessageCircle },
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
+    { name: 'community', href: '/dashboard/community', icon: Users },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
   ]
 
