@@ -22,37 +22,38 @@ export default function NewPost({ onClose }: { onClose?: () => void }) {
   const [selectedMood, setSelectedMood] = useState(moodOptions[0])
   const [loading, setLoading] = useState(false)
 
-  const handlePost = async () => {
-    if (!text.trim() || !user || loading) return
-    
-    if (text.length > 500) {
-      alert('Post must be under 500 characters')
-      return
-    }
-
-    setLoading(true)
-    try {
-      await addDoc(collection(db, 'community-posts'), {
-        text: text.trim(),
-        anonymousName: generateAnonymousName(),
-        mood: selectedMood.emoji,
-        moodLabel: selectedMood.label,
-        supportCount: 0,
-        flagCount: 0,
-        hidden: false,
-        userId: user.uid,
-        timestamp: serverTimestamp()
-      })
-
-      setText('')
-      if (onClose) onClose()
-    } catch (error) {
-      console.error('Error creating post:', error)
-      alert('Failed to post. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+ const handlePost = async () => {
+  if (!text.trim() || !user || loading) return
+  
+  if (text.length > 500) {
+    alert('Post must be under 500 characters')
+    return
   }
+
+  setLoading(true)
+  try {
+    await addDoc(collection(db, 'community-posts'), {
+      text: text.trim(),
+      anonymousName: generateAnonymousName(),
+      mood: selectedMood.emoji,
+      moodLabel: selectedMood.label,
+      supportCount: 0,
+      flagCount: 0,
+      hidden: false,
+      userId: user.uid,
+      timestamp: new Date() // CHANGED THIS - use client time instead
+    })
+
+    setText('')
+    if (onClose) onClose()
+  } catch (error) {
+    console.error('Error creating post:', error)
+    alert('Failed to post. Please try again.')
+  } finally {
+    setLoading(false)
+  }
+}
+
 
   return (
     <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-5 space-y-4">
@@ -61,6 +62,7 @@ export default function NewPost({ onClose }: { onClose?: () => void }) {
         <h3 className="text-base font-medium text-zinc-200">Share anonymously</h3>
         {onClose && (
           <button
+          title = "Close"
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-xl text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
           >

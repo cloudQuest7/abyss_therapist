@@ -16,13 +16,13 @@ export default function MobileNav() {
     { name: 'home', href: '/dashboard', icon: Home },
     { name: 'chat', href: '/dashboard/chat', icon: MessageCircle },
     { name: 'journal', href: '/dashboard/journal', icon: BookOpen },
-    { name: 'community', href: '/dashboard/community', icon: Users },
     { name: 'crisis', href: '/dashboard/crisis', icon: AlertCircle },
   ]
 
   const menuItems = [
     { name: 'profile', href: '/dashboard/profile', icon: User, description: 'manage your account' },
     { name: 'analytics', href: '/dashboard/analytics', icon: Sparkles, description: 'view your progress' },
+      { name: 'community', href: '/dashboard/community', icon: Users , description: 'connect with others' },
   ]
 
   const isActive = (href: string) => {

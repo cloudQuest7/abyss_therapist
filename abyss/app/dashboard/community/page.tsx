@@ -35,38 +35,45 @@ export default function CommunityPage() {
     { label: 'sharing', emoji: '📝' },
   ]
 
-  useEffect(() => {
-    let q = query(
+useEffect(() => {
+  let q;
+  
+  if (activeFilter !== 'all') {
+    q = query(
+      collection(db, 'community-posts'),
+      where('hidden', '==', false),
+      where('moodLabel', '==', activeFilter),
+      orderBy('timestamp', 'desc'),
+      limit(50)
+    )
+  } else {
+    q = query(
       collection(db, 'community-posts'),
       where('hidden', '==', false),
       orderBy('timestamp', 'desc'),
       limit(50)
     )
+  }
 
-    if (activeFilter !== 'all') {
-      q = query(
-        collection(db, 'community-posts'),
-        where('hidden', '==', false),
-        where('moodLabel', '==', activeFilter),
-        orderBy('timestamp', 'desc'),
-        limit(50)
-      )
-    }
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const postsData: Post[] = []
-      snapshot.forEach((doc) => {
-        postsData.push({ id: doc.id, ...doc.data() } as Post)
-      })
-      setPosts(postsData)
-      setLoading(false)
-    }, (error) => {
-      console.error('Error loading posts:', error)
-      setLoading(false)
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const postsData: Post[] = []
+    snapshot.forEach((doc) => {
+      const data = doc.data()
+      // Only add posts that have a timestamp (skip nulls)
+      if (data.timestamp) {
+        postsData.push({ id: doc.id, ...data } as Post)
+      }
     })
+    setPosts(postsData)
+    setLoading(false)
+  }, (error) => {
+    console.error('Error loading posts:', error)
+    setLoading(false)
+  })
 
-    return () => unsubscribe()
-  }, [activeFilter])
+  return () => unsubscribe()
+}, [activeFilter])
+
 
   return (
     <div className="min-h-screen bg-black">

@@ -20,9 +20,9 @@ const footerLinks = [
   { label: 'crisis help', href: '/crisis', highlight: true },
 ]
 
-export default function Footer() {
+export default function Footer({ id }: { id?: string }) {
   return (
-    <div className="relative w-full bg-black">
+    <div id={id} className="relative w-full bg-black">
       {/* Hexagon Background */}
       <div className="absolute inset-0 opacity-10">
         <HexagonBackground className="w-full h-full" />

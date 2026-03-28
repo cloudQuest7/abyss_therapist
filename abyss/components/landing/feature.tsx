@@ -35,7 +35,7 @@ const features = [
   },
 ]
 
-export default function Features() {
+export default function Features({ id }: { id?: string }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Spread cards horizontally when expanded
@@ -46,7 +46,7 @@ export default function Features() {
   const zIndex = [40, 30, 20, 10]
 
   return (
-    <section className="relative py-20 md:py-32 px-4 md:px-6 bg-black">
+    <section id={id} className="relative py-20 md:py-32 px-4 md:px-6 bg-black">
       
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto">

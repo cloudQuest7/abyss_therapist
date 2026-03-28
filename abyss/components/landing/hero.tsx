@@ -6,11 +6,11 @@ import { StarsBackground } from '@/components/animate-ui/components/backgrounds/
 import { motion } from 'framer-motion';
 import ShinyText from '@/components/ShinyText';
 
-const Hero = () => {
+const Hero = ({ id }: { id?: string }) => {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-screen bg-black flex items-center justify-center px-6 overflow-hidden">
+    <section id={id} className="relative min-h-screen bg-black flex items-center justify-center px-6 overflow-hidden">
       {/* Stars Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
       <StarsBackground 

@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react'
 import Hero from '@/components/landing/hero'
 import FeaturesSection from '@/components/landing/feature'
+import Pricing from '@/components/landing/pricing'
+import FAQ from '@/components/landing/faq'
 import Footer from '@/components/landing/footer'
 import StaggeredMenu from '@/components/StaggeredMenu';
 
@@ -17,10 +19,10 @@ const Landing = () => {
   }, []);
 
   const menuItems = [
-    { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
-    { label: 'About', ariaLabel: 'Learn about us', link: '/hero' },
-    { label: 'Feature', ariaLabel: 'View our services', link: '/feature' },
-    { label: 'Contact', ariaLabel: 'Get in touch', link: '/footer' }
+    { label: 'Home', ariaLabel: 'Go to home page', link: '#hero' },
+    { label: 'Features', ariaLabel: 'View our features', link: '#features' },
+    { label: 'Pricing', ariaLabel: 'View pricing plans', link: '#pricing' },
+    { label: 'FAQ', ariaLabel: 'Frequently asked questions', link: '#faq' }
   ];
 
   const socialItems = [
@@ -64,9 +66,11 @@ const Landing = () => {
         
       />
 
-      <Hero />
-      <FeaturesSection />
-      <Footer />
+      <Hero id="hero" />
+      <FeaturesSection id="features" />
+      <Pricing id="pricing" />
+      <FAQ id="faq" />
+      <Footer id="footer" />
     </div>
   )
 }
