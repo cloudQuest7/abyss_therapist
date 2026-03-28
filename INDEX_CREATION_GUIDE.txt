@@ -256,3 +256,14 @@ SUMMARY:
 3. Click PUBLISH
 4. Hard refresh app (Ctrl+Shift+R)
 5. Done! All permission errors fixed.
+
+📋 QUICK FIX COMMANDS:
+
+# Test build locally before pushing:
+npm run build
+
+# Test linting:
+npm run lint
+
+# Format with proper rules:
+npm run lint -- --fix

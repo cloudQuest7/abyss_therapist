@@ -1,61 +1,107 @@
 
-helloo
+# 🌑 Abyss Therapist
 
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Journals
-    match /journals/{journalId} {
-      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-    
-    // Chats
-    match /chats/{chatId} {
-      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-    }
-  }
-}
+<div align="center">
 
+![Abyss Preview](./public/abyss.png)
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-Realtime-FFA500?style=flat-square&logo=firebase&logoColor=white)](https://firebase.google.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Framer Motion](https://img.shields.io/badge/Framer-Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/cloudQuest7/abyss_therapist?style=flat-square&logo=github)](https://github.com/cloudQuest7/abyss_therapist/stargazers)
 
-First, run the development server:
+A dark, immersive mental wellness platform with journaling, community support, and AI assistance.
+
+[Live Demo](#) • [Report Bug](https://github.com/cloudQuest7/abyss_therapist/issues) • [Request Feature](https://github.com/cloudQuest7/abyss_therapist/issues)
+
+</div>
+
+---
+
+## ✨ Features
+
+- 📔 **Mood Journaling** — Track emotions with real-time streaks and patterns
+- 💬 **Community Healing** — Share, react, and support anonymously
+- 🤖 **AI Assistant** — Real-time wellness guidance and crisis support
+- 📊 **Live Analytics** — Beautiful dashboard with mood trends and insights
+- 🥚 **Easter Eggs** — Hidden developer contact portals throughout the app
+- 🎨 **Dark UI** — Glassmorphism design with Framer Motion animations
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ | npm/pnpm/yarn
+- Firebase project (Firestore + Auth)
+
+### Setup
 
 ```bash
+# Clone & install
+git clone https://github.com/cloudQuest7/abyss_therapist.git
+cd abyss_therapist/abyss
+npm install
+
+# Configure Firebase
+# Create .env.local with your Firebase credentials:
+# NEXT_PUBLIC_FIREBASE_API_KEY=...
+# NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+**Frontend:** Next.js 16 • React 19 • TypeScript • Tailwind CSS • Framer Motion  
+**Backend:** Firebase • Firestore • Cloud Functions  
+**DevOps:** GitHub Actions • Vercel  
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+abyss/
+├── app/
+│   ├── dashboard/        # User dashboard & features
+│   ├── api/              # API routes
+│   └── page.tsx          # Landing page
+├── components/           # Reusable UI components
+├── lib/                  # Firebase & utilities
+└── public/               # Static assets
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 💬 Get in Touch
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **GitHub Issues** — [Report bugs or request features](https://github.com/cloudQuest7/abyss_therapist/issues)
+- **Use Easter Eggs** — Find hidden portals to message the developer directly
+- **Twitter** — [@cloudQuest7](https://twitter.com)
+
+---
+
+## 📝 License
+
+MIT License — see [LICENSE](LICENSE) file
+
+---
+
+<div align="center">
+
+Made with 💜 for healing
+
+⭐ Star this repo if it helped you!
+
+</div>
+

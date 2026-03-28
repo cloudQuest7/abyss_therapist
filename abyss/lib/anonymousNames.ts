@@ -21,10 +21,10 @@ export function generateAnonymousName(): string {
   return `${adj} ${noun} #${number}`
 }
 
-export function formatTimeAgo(timestamp: any): string {
+export function formatTimeAgo(timestamp: any | null | { toDate(): Date }): string {
   if (!timestamp) return 'just now'
   
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+  const date = timestamp && typeof timestamp.toDate === 'function' ? timestamp.toDate() : new Date(timestamp)
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
   
   if (seconds < 60) return 'just now'

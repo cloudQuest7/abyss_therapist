@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Calendar, Flame, Heart, BookOpen, Sparkles, ArrowLeft, Share2, Bookmark } from 'lucide-react'
 import { useAuth } from '@/components/AuthContext'
-import { collection, query, orderBy, getDocs, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, orderBy, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Link from 'next/link'
 import { HexagonBackground } from '@/components/animate-ui/components/backgrounds/hexagon'
@@ -17,7 +17,7 @@ interface MoodEntry {
 interface CommunityPost {
   mood: string
   moodLabel: string
-  timestamp: any
+  timestamp: any | { toDate(): Date }
   supportCount: number
   reactions?: { notAlone: number }
 }
