@@ -10,7 +10,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 interface AuthContextType {
   user: User | null
@@ -30,8 +31,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
+      
+      // Track login if user is authenticated
+      if (user) {
+        try {
+          const today = new Date().toLocaleDateString()
+          await setDoc(
+            doc(db, 'user-logins', `${user.uid}-${today}`),
+            {
+              userId: user.uid,
+              timestamp: serverTimestamp(),
+              date: today
+            },
+            { merge: true }
+          )
+        } catch (error) {
+          console.error('Error tracking login:', error)
+        }
+      }
+      
       setLoading(false)
     })
     return unsubscribe

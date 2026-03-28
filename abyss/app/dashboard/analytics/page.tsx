@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Calendar, Flame, Heart, BookOpen, Sparkles, ArrowLeft } from 'lucide-react'
+import { TrendingUp, Calendar, Flame, Heart, BookOpen, Sparkles, ArrowLeft, Share2, Bookmark } from 'lucide-react'
 import { useAuth } from '@/components/AuthContext'
-import { collection, query, orderBy, getDocs } from 'firebase/firestore'
+import { collection, query, orderBy, getDocs, where, onSnapshot } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import Link from 'next/link'
 import { HexagonBackground } from '@/components/animate-ui/components/backgrounds/hexagon'
@@ -14,30 +14,64 @@ interface MoodEntry {
   date: Date
 }
 
+interface CommunityPost {
+  mood: string
+  moodLabel: string
+  timestamp: any
+  supportCount: number
+  reactions?: { notAlone: number }
+}
+
+interface AnalyticsStats {
+  totalEntries: number
+  currentStreak: number
+  averageMood: number
+  bestMood: number
+  totalChats: number
+  daysActive: number
+  communityPosts: number
+  supportReceived: number
+  reactionsReceived: number
+  bookmarksReceived: number
+  postsSupported: number
+  postsReacted: number
+  postsSaved: number
+}
+
 export default function AnalyticsPage() {
   const { user } = useAuth()
   const [moodData, setMoodData] = useState<MoodEntry[]>([])
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<AnalyticsStats>({
     totalEntries: 0,
     currentStreak: 0,
     averageMood: 0,
     bestMood: 0,
-    totalChats: 0
+    totalChats: 0,
+    daysActive: 0,
+    communityPosts: 0,
+    supportReceived: 0,
+    reactionsReceived: 0,
+    bookmarksReceived: 0,
+    postsSupported: 0,
+    postsReacted: 0,
+    postsSaved: 0
   })
 
   useEffect(() => {
-    const loadAnalytics = async () => {
-      if (!user) return
+    if (!user) return
 
-      try {
-        // Load journal entries
-        const journalRef = collection(db, 'users', user.uid, 'journals')
-        const q = query(journalRef, orderBy('createdAt', 'desc'))
-        const querySnapshot = await getDocs(q)
+    const unsubscribers: (() => void)[] = []
 
+    try {
+      // 1. Real-time journal entries listener
+      const journalRef = collection(db, 'users', user.uid, 'journals')
+      const journalQuery = query(journalRef, orderBy('createdAt', 'desc'))
+      
+      const unsubscribeJournal = onSnapshot(journalQuery, (snapshot) => {
         const entries: MoodEntry[] = []
-        querySnapshot.forEach((doc) => {
+        snapshot.forEach((doc) => {
           const data = doc.data()
           if (data.mood) {
             entries.push({
@@ -46,10 +80,9 @@ export default function AnalyticsPage() {
             })
           }
         })
-
         setMoodData(entries)
 
-        // Calculate stats
+        // Calculate journal-based stats
         const totalEntries = entries.length
         const averageMood = entries.length > 0 
           ? entries.reduce((sum, e) => sum + e.mood, 0) / entries.length 
@@ -57,27 +90,137 @@ export default function AnalyticsPage() {
         const bestMood = entries.length > 0 
           ? Math.max(...entries.map(e => e.mood)) 
           : 0
-
-        // Calculate streak
         const streak = calculateStreak(entries)
 
-        setStats({
+        setStats(prev => ({
+          ...prev,
           totalEntries,
           currentStreak: streak,
           averageMood: parseFloat(averageMood.toFixed(1)),
-          bestMood,
-          totalChats: 0 // Can add chat count later
+          bestMood
+        }))
+      }, (error) => {
+        console.error('Journal listener error:', error)
+      })
+      unsubscribers.push(unsubscribeJournal)
+
+      // 2. Real-time community posts listener
+      const postsQuery = query(
+        collection(db, 'community-posts'),
+        where('userId', '==', user.uid),
+        orderBy('timestamp', 'desc')
+      )
+      
+      const unsubscribePosts = onSnapshot(postsQuery, (snapshot) => {
+        const userPosts: CommunityPost[] = []
+        snapshot.forEach((doc) => {
+          const data = doc.data()
+          userPosts.push(data as CommunityPost)
+        })
+        setCommunityPosts(userPosts)
+
+        // Calculate support and reactions received
+        let supportReceived = 0
+        let reactionsReceived = 0
+
+        userPosts.forEach(post => {
+          supportReceived += post.supportCount || 0
+          reactionsReceived += post.reactions?.notAlone || 0
         })
 
-      } catch (error) {
-        console.error('Error loading analytics:', error)
-      } finally {
-        setLoading(false)
-      }
+        setStats(prev => ({
+          ...prev,
+          communityPosts: userPosts.length,
+          supportReceived,
+          reactionsReceived
+        }))
+      }, (error) => {
+        console.error('Posts listener error:', error)
+      })
+      unsubscribers.push(unsubscribePosts)
+
+      // 3. Real-time user supports listener (posts you've supported)
+      const userSupportsQuery = query(
+        collection(db, 'user-supports'),
+        where('userId', '==', user.uid)
+      )
+      const unsubscribeSupports = onSnapshot(userSupportsQuery, (snapshot) => {
+        const postIds = snapshot.size > 0 
+          ? snapshot.docs[0].data().postIds || []
+          : []
+        
+        setStats(prev => ({
+          ...prev,
+          postsSupported: postIds.length
+        }))
+      }, (error) => {
+        console.error('Supports listener error:', error)
+      })
+      unsubscribers.push(unsubscribeSupports)
+
+      // 4. Real-time user reactions listener (reactions you've given)
+      const userReactionsQuery = query(
+        collection(db, 'user-reactions'),
+        where('userId', '==', user.uid)
+      )
+      const unsubscribeReactions = onSnapshot(userReactionsQuery, (snapshot) => {
+        const postIds = snapshot.size > 0 
+          ? snapshot.docs[0].data().postIds || []
+          : []
+        
+        setStats(prev => ({
+          ...prev,
+          postsReacted: postIds.length
+        }))
+      }, (error) => {
+        console.error('Reactions listener error:', error)
+      })
+      unsubscribers.push(unsubscribeReactions)
+
+      // 5. Real-time user saves listener (bookmarks)
+      const userSavesQuery = query(
+        collection(db, 'user-saves'),
+        where('userId', '==', user.uid)
+      )
+      const unsubscribeSaves = onSnapshot(userSavesQuery, (snapshot) => {
+        const postIds = snapshot.size > 0 
+          ? snapshot.docs[0].data().postIds || []
+          : []
+        
+        setStats(prev => ({
+          ...prev,
+          postsSaved: postIds.length
+        }))
+      }, (error) => {
+        console.error('Saves listener error:', error)
+      })
+      unsubscribers.push(unsubscribeSaves)
+
+      // 6. Real-time chats listener
+      const chatsQuery = query(
+        collection(db, 'chats'),
+        where('userId', '==', user.uid)
+      )
+      const unsubscribeChats = onSnapshot(chatsQuery, (snapshot) => {
+        setStats(prev => ({
+          ...prev,
+          totalChats: snapshot.size
+        }))
+      }, (error) => {
+        console.error('Chats listener error:', error)
+      })
+      unsubscribers.push(unsubscribeChats)
+
+      setLoading(false)
+
+    } catch (error) {
+      console.error('Error setting up analytics listeners:', error)
+      setLoading(false)
     }
 
-    if (user) {
-      loadAnalytics()
+    // Cleanup all listeners when component unmounts or user changes
+    return () => {
+      unsubscribers.forEach(unsubscribe => unsubscribe())
     }
   }, [user])
 
@@ -166,62 +309,90 @@ export default function AnalyticsPage() {
             </p>
           </motion.div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* Total Entries */}
+          {/* Stats Grid - Essential Metrics Only - 2 rows of 3 on desktop */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
+            {/* Journal Entries */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5"
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
             >
-              <BookOpen className="w-6 h-6 text-purple-400 mb-3" />
-              <h3 className="text-3xl font-light text-white mb-1">
+              <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
                 {stats.totalEntries}
               </h3>
-              <p className="text-gray-500 text-sm">journal entries</p>
+              <p className="text-gray-500 text-xs sm:text-sm">journals</p>
             </motion.div>
 
             {/* Streak */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5"
+              transition={{ delay: 0.15 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
             >
-              <Flame className="w-6 h-6 text-orange-400 mb-3" />
-              <h3 className="text-3xl font-light text-white mb-1">
+              <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
                 {stats.currentStreak}
               </h3>
-              <p className="text-gray-500 text-sm">day streak 🔥</p>
-            </motion.div>
-
-            {/* Average Mood */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5"
-            >
-              <Heart className="w-6 h-6 text-pink-400 mb-3" />
-              <h3 className="text-3xl font-light text-white mb-1">
-                {stats.averageMood > 0 ? stats.averageMood : '—'}
-              </h3>
-              <p className="text-gray-500 text-sm">average mood</p>
+              <p className="text-gray-500 text-xs sm:text-sm">streak</p>
             </motion.div>
 
             {/* Best Mood */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-5"
+              transition={{ delay: 0.2 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
             >
-              <Sparkles className="w-6 h-6 text-yellow-400 mb-3" />
-              <h3 className="text-3xl font-light text-white mb-1">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
                 {stats.bestMood > 0 ? getMoodEmoji(stats.bestMood) : '—'}
               </h3>
-              <p className="text-gray-500 text-sm">best day</p>
+              <p className="text-gray-500 text-xs sm:text-sm">best day</p>
+            </motion.div>
+
+            {/* Posts Created */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
+            >
+              <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
+                {stats.communityPosts}
+              </h3>
+              <p className="text-gray-500 text-xs sm:text-sm">posts made</p>
+            </motion.div>
+
+            {/* Posts Supported */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
+            >
+              <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
+                {stats.postsSupported}
+              </h3>
+              <p className="text-gray-500 text-xs sm:text-sm">supported</p>
+            </motion.div>
+
+            {/* Bookmarks */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 sm:p-5"
+            >
+              <Bookmark className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 mb-2 sm:mb-3" />
+              <h3 className="text-2xl sm:text-3xl font-light text-white mb-1">
+                {stats.postsSaved}
+              </h3>
+              <p className="text-gray-500 text-xs sm:text-sm">bookmarks</p>
             </motion.div>
           </div>
 

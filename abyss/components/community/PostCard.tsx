@@ -213,6 +213,28 @@ export default function PostCard({ post }: { post: Post }) {
         </div>
       )}
 
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div className="mt-3 p-3 bg-zinc-800/50 rounded-xl border border-red-500/30">
+          <p className="text-sm text-zinc-300 mb-2">Delete this post? This cannot be undone.</p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className="px-3 py-1.5 text-xs bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Deleting...' : 'Yes, delete'}
+            </button>
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-3 py-1.5 text-xs bg-zinc-700 text-zinc-300 rounded-lg hover:bg-zinc-600 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {post.hidden && post.userId === user?.uid && (
         <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
           <p className="text-xs text-yellow-500">This post has been hidden due to reports</p>
