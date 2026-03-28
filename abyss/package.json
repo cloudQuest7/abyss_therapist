@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0 || true"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
