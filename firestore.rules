@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Journal entries - can only read/write own entries
+    match /journals/{journalId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuth() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if isUser(userId);
+
+      // Nested journals subcollection (if used)
+      match /journals/{journalId} {
+        allow read, write: if isUser(userId);
+      }
+    }
+
+    // Community posts collection - anyone can read, user can write their own
+    match /community-posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+      
+      // Replies subcollection
+      match /replies/{replyId} {
+        allow read: if isAuth();
+        allow create: if isAuth();
+        allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Online users - anyone can write their own, anyone can read
+    match /online-users/{userId} {
+      allow read: if isAuth();
+      allow write: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    // User supports - can only read/write own document
+    match /user-supports/{userId} {
+      allow read: if isUser(userId);
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    // User reactions - can only read/write own document
+    match /user-reactions/{userId} {
+      allow read: if isUser(userId);
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    // User saves (bookmarks) - can only read/write own document
+    match /user-saves/{userId} {
+      allow read: if isUser(userId);
+      allow create: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
+    }
+
+    // User logins tracking - can only read/write own documents
+    match /user-logins/{loginId} {
+      allow read: if isAuth() && request.auth.uid == resource.data.userId;
+      allow write: if isAuth() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Chats - can only read/write own chats
+    match /chats/{chatId} {
+      allow read, write: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+    }
+
+    // Dev conversations - analytics/dev features
+    match /dev-conversations/{docId} {
+      allow read, write: if isAuth();
+    }
+  }
+}
