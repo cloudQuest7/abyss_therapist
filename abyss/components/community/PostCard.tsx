@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Heart, Flag, MessageCircle } from 'lucide-react'
+import { Heart, Flag, Trash2 } from 'lucide-react'
 import { formatTimeAgo } from '@/lib/anonymousNames'
-import { doc, updateDoc, increment, setDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, increment, setDoc, getDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/components/AuthContext'
+import ReactionButton from './ReactionButton'
+import BookmarkButton from './BookmarkButton'
 
 interface Post {
   id: string
@@ -13,7 +15,8 @@ interface Post {
   anonymousName: string
   mood: string
   supportCount: number
-  timestamp: any
+  reactions?: { notAlone: number }
+  timestamp: Date
   userId: string
   flagCount?: number
   hidden?: boolean
@@ -25,6 +28,7 @@ export default function PostCard({ post }: { post: Post }) {
   const [count, setCount] = useState(post.supportCount)
   const [loading, setLoading] = useState(false)
   const [showReportConfirm, setShowReportConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   // Check if user already supported this post
   useState(() => {
@@ -96,6 +100,22 @@ export default function PostCard({ post }: { post: Post }) {
     }
   }
 
+  const handleDelete = async () => {
+    if (!user || user.uid !== post.userId) return
+    
+    setLoading(true)
+    try {
+      await deleteDoc(doc(db, 'community-posts', post.id))
+      setShowDeleteConfirm(false)
+      // The post will disappear from the feed via real-time listener
+    } catch (error) {
+      console.error('Error deleting post:', error)
+      alert('Failed to delete post. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (post.hidden && post.userId !== user?.uid) {
     return null
   }
@@ -111,14 +131,27 @@ export default function PostCard({ post }: { post: Post }) {
           <span>{formatTimeAgo(post.timestamp)}</span>
         </div>
         
-        {post.userId !== user?.uid && (
-          <button
-            onClick={() => setShowReportConfirm(true)}
-            className="text-zinc-600 hover:text-zinc-400 transition-colors"
-          >
-            <Flag className="w-4 h-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <BookmarkButton postId={post.id} userId={post.userId} />
+          {post.userId === user?.uid && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-zinc-600 hover:text-red-400 transition-colors"
+              title="Delete this post"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          {post.userId !== user?.uid && (
+            <button
+              onClick={() => setShowReportConfirm(true)}
+              className="text-zinc-600 hover:text-zinc-400 transition-colors"
+              title="Report this post"
+            >
+              <Flag className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -127,25 +160,36 @@ export default function PostCard({ post }: { post: Post }) {
       </p>
 
       {/* Actions */}
-      <div className="flex items-center gap-4 pt-2">
-        <button
-          onClick={handleSupport}
-          disabled={supported || loading}
-          className={`flex items-center gap-2 text-sm transition-all duration-200 ${
-            supported 
-              ? 'text-pink-400' 
-              : 'text-zinc-500 hover:text-pink-400 active:scale-95'
-          }`}
-        >
-          <Heart 
-            className="w-4 h-4" 
-            fill={supported ? 'currentColor' : 'none'}
-            strokeWidth={2}
+      <div className="flex flex-col gap-3 pt-2">
+        <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={handleSupport}
+            disabled={supported || loading}
+            className={`flex items-center gap-2 text-sm transition-all duration-200 ${
+              supported 
+                ? 'text-pink-400' 
+                : 'text-zinc-500 hover:text-pink-400 active:scale-95'
+            }`}
+          >
+            <Heart 
+              className="w-4 h-4" 
+              fill={supported ? 'currentColor' : 'none'}
+              strokeWidth={2}
+            />
+            <span className="text-xs">
+              {count === 0 ? 'Be the first to support' : `${count} ${count === 1 ? 'person sees you' : 'people see you'}`}
+            </span>
+          </button>
+        </div>
+
+        {/* Reaction Button */}
+        {post.userId !== user?.uid && (
+          <ReactionButton 
+            postId={post.id} 
+            userId={post.userId}
+            reactionCount={post.reactions?.notAlone || 0}
           />
-          <span>
-            {count === 0 ? 'Be the first to support' : `${count} ${count === 1 ? 'person sees you' : 'people see you'}`}
-          </span>
-        </button>
+        )}
       </div>
 
       {/* Report Confirmation */}

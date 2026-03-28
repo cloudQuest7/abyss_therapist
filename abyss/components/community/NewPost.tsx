@@ -16,11 +16,35 @@ const moodOptions = [
   { emoji: '🌙', label: 'nighttime' },
 ]
 
-export default function NewPost({ onClose }: { onClose?: () => void }) {
+export default function NewPost({ 
+  onClose,
+  onCrisisDetected
+}: { 
+  onClose?: () => void
+  onCrisisDetected?: (content: string) => void
+}) {
   const { user } = useAuth()
   const [text, setText] = useState('')
   const [selectedMood, setSelectedMood] = useState(moodOptions[0])
   const [loading, setLoading] = useState(false)
+
+  const distressKeywords = [
+    "end it",
+    "can't anymore",
+    "no point",
+    "want to disappear",
+    "done with everything",
+    "nobody cares",
+    "what's the point"
+  ]
+
+  /**
+   * Check if text contains distress keywords
+   */
+  const containsDistressKeywords = (content: string): boolean => {
+    const lowerContent = content.toLowerCase()
+    return distressKeywords.some(keyword => lowerContent.includes(keyword))
+  }
 
  const handlePost = async () => {
   if (!text.trim() || !user || loading) return
@@ -30,6 +54,21 @@ export default function NewPost({ onClose }: { onClose?: () => void }) {
     return
   }
 
+  // Check for distress keywords
+  if (containsDistressKeywords(text)) {
+    if (onCrisisDetected) {
+      onCrisisDetected(text)
+    }
+    return
+  }
+
+  // If no crisis detected, proceed with posting
+  await submitPost()
+}
+
+const submitPost = async () => {
+  if (!text.trim() || !user || loading) return
+
   setLoading(true)
   try {
     await addDoc(collection(db, 'community-posts'), {
@@ -38,10 +77,11 @@ export default function NewPost({ onClose }: { onClose?: () => void }) {
       mood: selectedMood.emoji,
       moodLabel: selectedMood.label,
       supportCount: 0,
+      reactions: { notAlone: 0 },
       flagCount: 0,
       hidden: false,
       userId: user.uid,
-      timestamp: new Date() // CHANGED THIS - use client time instead
+      timestamp: serverTimestamp()
     })
 
     setText('')

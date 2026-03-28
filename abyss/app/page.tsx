@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect } from 'react'
+import { Linkedin, Github, Mail } from 'lucide-react'
 import Hero from '@/components/landing/hero'
 import FeaturesSection from '@/components/landing/feature'
 import Pricing from '@/components/landing/pricing'
@@ -26,9 +27,9 @@ const Landing = () => {
   ];
 
   const socialItems = [
-    { label: 'LinkedIn', link: 'https://www.linkedin.com/in/anjali-jayakumar-145902320/' },
-    { label: 'GitHub', link: 'https://github.com/cloudQuest7' },
-    { label: 'Email', link: 'mailto:anjalijayakumar79@gmail.com' }
+    { label: 'LinkedIn', link: 'https://www.linkedin.com/in/anjali-jayakumar-145902320/', icon: Linkedin },
+    { label: 'GitHub', link: 'https://github.com/cloudQuest7', icon: Github },
+    { label: 'Email', link: 'mailto:anjalijayakumar79@gmail.com', icon: Mail }
   ];
 
   // Prevent flash by not rendering menu until mounted

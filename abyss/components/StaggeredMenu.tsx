@@ -417,7 +417,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
           aria-label="Main navigation header"
         >
           <div className="sm-logo flex items-center select-none pointer-events-auto" aria-label="Logo">
-          
+            {logoUrl && <img src={logoUrl} alt="Logo" className="sm-logo-img h-8 w-auto object-contain" />}
           </div>
 
           <button
@@ -518,9 +518,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={s.label}
-                          className="sm-socials-link w-8 h-8 rounded-lg bg-black/20 border border-gray-600 flex items-center justify-center text-[#111] no-underline relative transition-all duration-300 ease-linear hover:bg-black/40 hover:border-[var(--sm-accent,#ff0000)]"
+                          className="sm-socials-link w-10 h-10 rounded-lg bg-black/20 border border-gray-600 flex items-center justify-center text-[#111] no-underline relative transition-all duration-300 ease-linear hover:bg-black/40 hover:border-[var(--sm-accent,#ff0000)]"
                         >
-                          {Icon && <Icon className="w-5 h-5" />}
+                          {Icon && <Icon className="w-6 h-6" />}
                         </a>
                       </li>
                     );
@@ -563,7 +563,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 .sm-scope .sm-socials-list .sm-socials-link:hover,
 .sm-scope .sm-socials-list .sm-socials-link:focus-visible { opacity: 1; }
 .sm-scope .sm-socials-link:focus-visible { outline: 2px solid var(--sm-accent, #ff0000); outline-offset: 3px; }
-.sm-scope .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #111; text-decoration: none; position: relative; padding: 2px 0; display: inline-block; transition: color 0.3s ease, opacity 0.3s ease; }
+.sm-scope .sm-socials-link { font-size: 1.2rem; font-weight: 500; color: #111; text-decoration: none; position: relative; display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; transition: color 0.3s ease, opacity 0.3s ease; }
 .sm-scope .sm-socials-link:hover { color: var(--sm-accent, #ff0000); }
 .sm-scope .sm-panel-title { margin: 0; font-size: 1rem; font-weight: 600; color: #fff; text-transform: uppercase; }
 .sm-scope .sm-panel-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }

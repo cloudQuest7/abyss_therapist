@@ -154,7 +154,7 @@ export default function ChatPage() {
       </div>
 
       {/* Messages Container - Stars background ONLY here */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8 relative">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 md:py-8 relative scroll-smooth">
         
         {/* Stars Background - Only in messages area */}
         <div className="absolute inset-0 opacity-50 pointer-events-none">
@@ -247,8 +247,8 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 backdrop-blur-xl bg-black/30 border-t border-zinc-900">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-4 md:py-5">
+      <div className="flex-shrink-0 backdrop-blur-xl bg-black/30 border-t border-zinc-900 ">
+        <div className="max-w-4xl mx-auto px-2 md:px-3 py-2 ">
           <div className="relative flex items-end gap-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-3 md:p-4 shadow-2xl">
             <textarea
               ref={textareaRef}
@@ -262,7 +262,7 @@ export default function ChatPage() {
               aria-label="Chat message input"
               className="flex-1 bg-transparent resize-none outline-none text-[15px] md:text-base text-gray-100 placeholder:text-gray-600 max-h-32 disabled:cursor-not-allowed disabled:opacity-50"
               style={{
-                minHeight: '24px',
+                minHeight: '15px',
                 height: 'auto',
               }}
             />
@@ -278,9 +278,6 @@ export default function ChatPage() {
             </button>
           </div>
 
-          <p className="text-[11px] text-gray-600 text-center mt-3">
-            press <span className="text-gray-500">enter</span> to send · <span className="text-gray-500">shift + enter</span> for new line
-          </p>
         </div>
       </div>
 
